@@ -76,8 +76,8 @@ home = os.environ['HOME']
 path = input(f"Ether Path to bandcamp downloads (default: {home}/Downloads/bandcamp): ") or f"{home}/Downloads/bandcamp"
 print(f"Searching for music in: {path}\n")
 
-# unzip_songs(path)
-# rename_songs(path)
+unzip_songs(path)
+rename_songs(path)
 validate_cover_art(path)
 
 print(f"Script Complete!")
