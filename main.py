@@ -60,6 +60,25 @@ def correct_album_dir_name(directory_list):
         print(f"Matching dir to album name: {original_name} > {new_name}")
         os.rename(original_name, new_name)
 
+def correct_cover_art(start_path):
+    for root, dirs, files in os.walk(start_path):
+        regex_string = "(?i)^(folder|cover)"
+        full_path = root
+        album_path = root.replace(start_path,"").split('/')
+        stringcount = len(album_path)
+        if stringcount == 3:
+            for root, dirs, files in os.walk(full_path):
+                for file in files:
+                    if (file.endswith(".png") or file.endswith(".jpg")):
+                        if (re.search(regex_string, file)):
+                            file_ext = file.split('.')[-1]
+                            original_name = f"{root}/{file}"
+                            new_name = f"{root}/cover.{file_ext}"
+                            if original_name != new_name:
+                                print(f"Renaming: {original_name} --> {new_name}")
+                                os.rename(original_name, new_name)
+    print()
+
 def validate_cover_art(start_path):
     for root, dirs, files in os.walk(start_path):
         full_path = root
@@ -78,6 +97,7 @@ print(f"Searching for music in: {path}\n")
 
 unzip_songs(path)
 rename_songs(path)
+correct_cover_art(path)
 validate_cover_art(path)
 
 print(f"Script Complete!")
