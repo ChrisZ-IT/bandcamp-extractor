@@ -1,5 +1,6 @@
 import os
 import re
+import requests
 from zipfile import ZipFile
 
 def unzip_songs(start_path):
@@ -79,16 +80,74 @@ def correct_cover_art(start_path):
                                 os.rename(original_name, new_name)
     print()
 
+def get_album_id(artist, album):
+    url = "https://musicbrainz.org/ws/2/release/"
+
+    params = {
+        "query": f'artist:"{artist}" AND release:"{album}"',
+        "fmt": "json",
+        "limit": 1
+    }
+
+    headers = {
+        "User-Agent": "MyAlbumArtApp/1.0 (admin@musicbrainz.org)"
+    }
+
+    response = requests.get(url, params=params, headers=headers)
+    response.raise_for_status()
+
+    data = response.json()
+
+    release = data["releases"][0]
+
+    return (release["id"])
+
+def download_album_art(mbid,output_path):
+
+    url = f"https://coverartarchive.org/release/{mbid}"
+
+    response = requests.get(url)
+    response.raise_for_status()
+
+    cover_data = response.json()
+
+    front = next(
+        img for img in cover_data["images"]
+        if img["front"]
+    )
+
+    thumbnails = front.get("thumbnails", {})
+
+    image_url = (
+        thumbnails.get("1200")
+        or thumbnails.get("large")
+        or front["image"]
+    )
+
+    img = requests.get(image_url)
+    img.raise_for_status()
+
+    with open(f"{output_path}/cover.jpg", "wb") as f:
+        f.write(img.content)
+
+    print(f"Downloaded {output_path}/cover.jpg")
+
 def validate_cover_art(start_path):
     for root, dirs, files in os.walk(start_path):
         full_path = root
         album_path = root.replace(start_path,"").split('/')
         stringcount = len(album_path)
         if stringcount == 3:
+            artist = album_path[1]
+            album = album_path[2]
             for root, dirs, files in os.walk(full_path):
                 files_lower = {f.lower() for f in files}
                 if not any(name in files_lower for name in ("cover.jpg", "cover.png")):
-                    print(f"Missing cover art: {root}")
+                    mbid = get_album_id(artist, album)
+                    if mbid:
+                        download_album_art(mbid,root)
+                    else:
+                        print(f"Unable to find cover art: {root}")
     print()
 
 home = os.environ['HOME']
