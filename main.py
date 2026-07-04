@@ -115,7 +115,7 @@ def download_album_art(mbid,output_path):
     with open(f"{output_path}/cover.jpg", "wb") as f:
         f.write(img.content)
 
-    print(f"Downloaded {output_path}/cover.jpg. Validate it is correct")
+    print(f"Downloaded {output_path}/cover.jpg. Validate it is correct!")
 
 def validate_cover_art(start_path):
     for root, dirs, files in os.walk(start_path):
